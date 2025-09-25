@@ -1,5 +1,5 @@
 /**
- * Nion Library
+ * Nion Library - Memory Arena
  * Mikaela Nion
  * @built: 2025-09-25
  * @version: 0.0.0.0.20250925

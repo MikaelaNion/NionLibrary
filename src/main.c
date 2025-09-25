@@ -1,21 +1,24 @@
 
 #include <stdio.h>
-#include "nionlib.h"
+#include "../include/nionlib.h"
 
-void main(void) {
-    // Example usage of the arena allocator
-    Arena *arena = arena_create(1024); // Create an arena with 1KB
+int main(void) {
+    // Create an arena with 1KB
+    Arena *arena = arena_create(1024);
+    printf("sizeof(arena): %ld\n", sizeof(arena));
     if (arena) {
-        int *arr = (int *)arena_alloc(arena, 10 * sizeof(int)); // Allocate space for 10 integers
+        int *arr = (int *)arena_alloc(arena, 10 * sizeof(int));
         if (arr) {
             for (int i = 0; i < 10; i++) {
-                arr[i] = i * i; // Initialize array
+                arr[i] = i * i;
                 printf("%d ", arr[i]);
             }
             printf("\n");
         }
-        arena_reset(arena); // Reset the arena for reuse
-        arena_destroy(arena); // Clean up
+        printf("sizeof(arr): %ld\n", sizeof(arr));
+        printf("sizeof(arena): %ld\n", sizeof(arena));
+        arena_reset(arena);
+        arena_destroy(arena);
     }
-    return;
+    return 0;
 }

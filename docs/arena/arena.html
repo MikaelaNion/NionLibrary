@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nion Library: Interactive Arena Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .code-block {
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            position: relative;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap');
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+    </style>
+    <!-- Chosen Palette: Slate Gray & Sky Blue -->
+    <!-- Application Structure Plan: The SPA is structured as a learning journey. It starts with a high-level introduction, immediately followed by an interactive simulator which is the core learning tool. This hands-on approach allows users to build an intuitive understanding first. Below the simulator, more detailed, traditional documentation (API Reference, Key Concepts, Usage Example) is provided for deeper study. This top-down, interactive-first structure is chosen to make a complex topic like memory management more approachable and engaging than a static document. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: The core mechanics of the memory arena (allocation, offset bumping, reset). -> Goal: Demonstrate. -> Viz/Presentation: An interactive visualizer with a memory bar and colored blocks representing allocations. -> Interaction: Buttons to trigger create, alloc, reset, destroy functions. -> Justification: Makes the abstract concept of a bump-pointer tangible and easy to understand. -> Library/Method: Vanilla JS, HTML, Tailwind CSS.
+        - Report Info: API function details. -> Goal: Inform. -> Viz/Presentation: An accordion interface. -> Interaction: Clicking headers to expand/collapse content. -> Justification: Organizes detailed information cleanly, preventing cognitive overload. -> Library/Method: Vanilla JS, HTML, Tailwind CSS.
+        - Report Info: Key benefits (speed, no fragmentation). -> Goal: Highlight. -> Viz/Presentation: Icon-driven info cards in a grid. -> Interaction: None (static). -> Justification: Easily scannable and visually reinforces the value proposition. -> Library/Method: HTML, Tailwind CSS.
+        - Report Info: C usage example. -> Goal: Instruct. -> Viz/Presentation: A styled code block. -> Interaction: Copy-to-clipboard button. -> Justification: Standard and convenient for developers. -> Library/Method: HTML, Tailwind CSS, Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900">Nion Library: Memory Arena</h1>
+            <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">An interactive guide to the high-performance memory management module. See how arena allocation works in real-time.</p>
+        </header>
+
+        <main class="flex flex-col gap-y-16">
+            <!-- Interactive Simulator Section -->
+            <section id="simulator" class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200">
+                <h2 class="text-2xl font-bold mb-2 text-slate-900">Interactive Arena Simulator</h2>
+                <p class="text-slate-600 mb-6">Create an arena, allocate memory, and see how the state changes. This is a visual representation of the C module's behavior.</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Controls -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="p-4 rounded-lg bg-slate-100 border border-slate-200">
+                            <h3 class="font-semibold text-lg mb-4">Controls</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="arena-size" class="block text-sm font-medium text-slate-700">1. Arena Size (bytes)</label>
+                                    <input type="number" id="arena-size" value="1024" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500">
+                                </div>
+                                <button id="create-btn" class="w-full bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors shadow-sm">Create Arena</button>
+                            </div>
+                            <div class="space-y-4 mt-4 pt-4 border-t border-slate-300">
+                                <div>
+                                    <label for="alloc-size" class="block text-sm font-medium text-slate-700">2. Allocation Size (bytes)</label>
+                                    <input type="number" id="alloc-size" value="128" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500">
+                                </div>
+                                <button id="alloc-btn" class="w-full bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm" disabled>Allocate Memory</button>
+                            </div>
+                             <div class="mt-4 pt-4 border-t border-slate-300 grid grid-cols-2 gap-4">
+                                <button id="reset-btn" class="w-full bg-amber-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-amber-600 transition-colors shadow-sm" disabled>Reset Arena</button>
+                                <button id="destroy-btn" class="w-full bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors shadow-sm" disabled>Destroy Arena</button>
+                            </div>
+                        </div>
+
+                        <div id="status-display" class="p-4 rounded-lg bg-slate-100 border border-slate-200 hidden">
+                             <h3 class="font-semibold text-lg mb-3">Arena State</h3>
+                             <div class="space-y-2 text-sm">
+                                 <div class="flex justify-between">
+                                     <span class="text-slate-600">Total Size:</span>
+                                     <span id="state-size" class="font-mono font-semibold text-slate-800">0 bytes</span>
+                                 </div>
+                                 <div class="flex justify-between">
+                                     <span class="text-slate-600">Current Offset:</span>
+                                     <span id="state-offset" class="font-mono font-semibold text-slate-800">0 bytes</span>
+                                 </div>
+                                  <div class="flex justify-between">
+                                     <span class="text-slate-600">Free Space:</span>
+                                     <span id="state-free" class="font-mono font-semibold text-emerald-700">0 bytes</span>
+                                 </div>
+                             </div>
+                        </div>
+
+                    </div>
+                    
+                    <!-- Visualization -->
+                    <div class="lg:col-span-2 flex flex-col h-full">
+                        <p id="arena-placeholder" class="text-center text-slate-500 h-full flex items-center justify-center">Create an arena to begin visualization.</p>
+                        <div id="arena-visualizer-container" class="hidden">
+                             <div class="relative w-full h-16 bg-slate-200 rounded-lg border-2 border-slate-300 overflow-hidden" id="arena-buffer">
+                                <!-- Allocations will be injected here -->
+                             </div>
+                             <div class="text-xs text-slate-500 flex justify-between mt-1">
+                                <span>0 bytes</span>
+                                <span id="max-size-label">1024 bytes</span>
+                             </div>
+                        </div>
+                        <div id="log-container" class="mt-4 flex-grow">
+                            <h3 class="font-semibold text-lg mb-2">Log</h3>
+                            <div id="log-output" class="h-64 bg-gray-900 text-white font-mono text-xs p-4 rounded-lg overflow-y-auto">
+                                <p class="text-gray-400">> Waiting for actions...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- API Reference Section -->
+            <section id="api-reference" class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200">
+                <h2 class="text-3xl font-bold text-center mb-8 text-slate-900">API Reference</h2>
+                <div class="space-y-4 max-w-4xl mx-auto">
+                    <!-- Accordion Item 1 -->
+                    <div class="bg-white rounded-lg shadow-md border border-slate-200">
+                        <button class="accordion-header w-full flex justify-between items-center p-5 text-left font-semibold text-lg text-sky-800">
+                            <span>Arena* arena_create(size_t size)</span>
+                            <span class="accordion-icon transform transition-transform text-sky-600">▼</span>
+                        </button>
+                        <div class="accordion-content px-5 pb-5">
+                            <p class="text-slate-600 mb-2">Allocates and initializes a new `Arena` object with a buffer of the specified `size`.</p>
+                            <ul class="list-disc list-inside space-y-1 text-slate-700">
+                                <li><strong>Parameters:</strong> `size` - The desired size of the memory arena buffer in bytes.</li>
+                                <li><strong>Returns:</strong> A pointer to the newly created `Arena` instance on success, or `NULL` if memory allocation fails.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Accordion Item 2 -->
+                    <div class="bg-white rounded-lg shadow-md border border-slate-200">
+                        <button class="accordion-header w-full flex justify-between items-center p-5 text-left font-semibold text-lg text-sky-800">
+                            <span>void* arena_alloc(Arena *arena, size_t size)</span>
+                            <span class="accordion-icon transform transition-transform text-sky-600">▼</span>
+                        </button>
+                        <div class="accordion-content px-5 pb-5">
+                            <p class="text-slate-600 mb-2">Allocates a block of memory from the specified `arena`. The allocated memory is not initialized.</p>
+                             <ul class="list-disc list-inside space-y-1 text-slate-700">
+                                <li><strong>Parameters:</strong> `arena` - A pointer to the `Arena` instance. `size` - The number of bytes to allocate.</li>
+                                <li><strong>Returns:</strong> A `void` pointer to the newly allocated block on success. Returns `NULL` if the arena has insufficient space.</li>
+                            </ul>
+                        </div>
+                    </div>
+                     <!-- Accordion Item 3 -->
+                    <div class="bg-white rounded-lg shadow-md border border-slate-200">
+                        <button class="accordion-header w-full flex justify-between items-center p-5 text-left font-semibold text-lg text-sky-800">
+                            <span>void arena_reset(Arena *arena)</span>
+                            <span class="accordion-icon transform transition-transform text-sky-600">▼</span>
+                        </button>
+                        <div class="accordion-content px-5 pb-5">
+                            <p class="text-slate-600 mb-2">Resets the `arena` for reuse by setting its internal offset back to zero. This is an extremely fast O(1) operation.</p>
+                             <ul class="list-disc list-inside space-y-1 text-slate-700">
+                                <li><strong>Parameters:</strong> `arena` - A pointer to the `Arena` instance to reset.</li>
+                                <li><strong>Returns:</strong> Nothing.</li>
+                            </ul>
+                        </div>
+                    </div>
+                     <!-- Accordion Item 4 -->
+                    <div class="bg-white rounded-lg shadow-md border border-slate-200">
+                        <button class="accordion-header w-full flex justify-between items-center p-5 text-left font-semibold text-lg text-sky-800">
+                            <span>void arena_destroy(Arena *arena)</span>
+                            <span class="accordion-icon transform transition-transform text-sky-600">▼</span>
+                        </button>
+                        <div class="accordion-content px-5 pb-5">
+                            <p class="text-slate-600 mb-2">Deallocates all memory associated with the `arena`, including the main buffer and the `Arena` struct itself.</p>
+                             <ul class="list-disc list-inside space-y-1 text-slate-700">
+                                <li><strong>Parameters:</strong> `arena` - A pointer to the `Arena` instance to destroy.</li>
+                                <li><strong>Returns:</strong> Nothing.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+             <!-- Key Concepts Section -->
+            <section id="key-concepts" class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200">
+                 <h2 class="text-3xl font-bold text-center mb-8 text-slate-900">Key Concepts & Benefits</h2>
+                 <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                        <h3 class="font-bold text-xl mb-2 text-slate-800">⚡️ Bump-Pointer Allocation</h3>
+                        <p class="text-slate-600">Allocations are incredibly fast (O(1)) because the system only needs to "bump" a pointer forward by the requested size. There's no complex search for a free block of memory.</p>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                        <h3 class="font-bold text-xl mb-2 text-slate-800">🗑️ Instant Mass Deallocation</h3>
+                        <p class="text-slate-600">Freeing all memory within the arena is an instantaneous O(1) operation. `arena_reset()` simply moves the offset pointer back to the start, making the entire buffer available again.</p>
+                    </div>
+                 </div>
+            </section>
+
+            <!-- Usage Example Section -->
+            <section id="usage-example" class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200">
+                 <h2 class="text-3xl font-bold text-center mb-8 text-slate-900">Usage Example</h2>
+                 <div class="max-w-4xl mx-auto relative">
+                    <button id="copy-code-btn" class="absolute top-4 right-4 bg-slate-600 text-white text-xs font-semibold py-1 px-3 rounded-md hover:bg-slate-700 transition-colors">Copy</button>
+                    <div class="code-block">
+<pre id="code-content"><code>#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include "../include/arena.h"
+
+int main() {
+    // Create an arena with a 1 MB buffer
+    Arena* my_arena = arena_create(1024 * 1024);
+    if (!my_arena) {
+        fprintf(stderr, "Failed to create arena.\n");
+        return 1;
+    }
+
+    // Allocate an integer and a character array
+    int* my_int = arena_alloc(my_arena, sizeof(int));
+    if (my_int) {
+        *my_int = 42;
+    }
+
+    char* my_string = arena_alloc(my_arena, 20);
+    if (my_string) {
+        strcpy(my_string, "Hello, Arena!");
+    }
+    
+    // Reset the arena to free all allocated memory at once
+    arena_reset(my_arena);
+
+    // Allocate again from the reused buffer
+    char* another = arena_alloc(my_arena, 30);
+    if (another) {
+        strcpy(another, "This is a new allocation!");
+    }
+
+    // Destroy the arena when finished
+    arena_destroy(my_arena);
+
+    return 0;
+}
+</code></pre>
+                    </div>
+                 </div>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 pt-8 border-t border-slate-200">
+            <p class="text-slate-500">Nion Library | Interactive Documentation | 2025</p>
+        </footer>
+
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- STATE ---
+    let arenaState = null;
+    const allocationColors = ['bg-sky-500', 'bg-emerald-500', 'bg-amber-500', 'bg-indigo-500', 'bg-pink-500'];
+    let colorIndex = 0;
+
+    // --- DOM ELEMENTS ---
+    const arenaSizeInput = document.getElementById('arena-size');
+    const allocSizeInput = document.getElementById('alloc-size');
+    const createBtn = document.getElementById('create-btn');
+    const allocBtn = document.getElementById('alloc-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const destroyBtn = document.getElementById('destroy-btn');
+    
+    const statusDisplay = document.getElementById('status-display');
+    const stateSize = document.getElementById('state-size');
+    const stateOffset = document.getElementById('state-offset');
+    const stateFree = document.getElementById('state-free');
+    
+    const placeholder = document.getElementById('arena-placeholder');
+    const visualizerContainer = document.getElementById('arena-visualizer-container');
+    const arenaBuffer = document.getElementById('arena-buffer');
+    const maxSizeLabel = document.getElementById('max-size-label');
+
+    const logOutput = document.getElementById('log-output');
+
+    // --- LOGIC FUNCTIONS ---
+    function logMessage(message, type = 'info') {
+        const p = document.createElement('p');
+        let typeColor = 'text-gray-400';
+        if (type === 'success') typeColor = 'text-green-400';
+        if (type === 'error') typeColor = 'text-red-400';
+        if (type === 'warn') typeColor = 'text-yellow-400';
+        p.className = typeColor;
+        p.textContent = `> ${message}`;
+        logOutput.appendChild(p);
+        logOutput.scrollTop = logOutput.scrollHeight;
+    }
+
+    function updateUI() {
+        if (arenaState) {
+            stateSize.textContent = `${arenaState.size} bytes`;
+            stateOffset.textContent = `${arenaState.offset} bytes`;
+            stateFree.textContent = `${arenaState.size - arenaState.offset} bytes`;
+            maxSizeLabel.textContent = `${arenaState.size} bytes`;
+
+            statusDisplay.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            visualizerContainer.classList.remove('hidden');
+
+            allocBtn.disabled = false;
+            resetBtn.disabled = false;
+            destroyBtn.disabled = false;
+        } else {
+            statusDisplay.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            visualizerContainer.classList.add('hidden');
+            
+            allocBtn.disabled = true;
+            resetBtn.disabled = true;
+            destroyBtn.disabled = true;
+        }
+    }
+
+    function handleCreate() {
+        const size = parseInt(arenaSizeInput.value, 10);
+        if (isNaN(size) || size <= 0) {
+            logMessage('Error: Invalid arena size.', 'error');
+            return;
+        }
+
+        arenaState = {
+            size: size,
+            offset: 0,
+            allocations: []
+        };
+        colorIndex = 0;
+        arenaBuffer.innerHTML = ''; // Clear previous visualizations
+        logMessage(`arena_create(${size}) called.`, 'success');
+        updateUI();
+    }
+
+    function handleAlloc() {
+        if (!arenaState) return;
+        const size = parseInt(allocSizeInput.value, 10);
+
+        if (isNaN(size) || size <= 0) {
+            logMessage('Error: Invalid allocation size.', 'error');
+            return;
+        }
+        
+        if (arenaState.offset + size > arenaState.size) {
+            logMessage(`arena_alloc(${size}) failed. Not enough space.`, 'error');
+            return;
+        }
+
+        const newAlloc = {
+            offset: arenaState.offset,
+            size: size,
+            color: allocationColors[colorIndex % allocationColors.length]
+        };
+        arenaState.allocations.push(newAlloc);
+        arenaState.offset += size;
+        colorIndex++;
+        
+        renderAllocations();
+        logMessage(`arena_alloc(${size}) successful. New offset: ${arenaState.offset}`, 'success');
+        updateUI();
+    }
+    
+    function renderAllocations() {
+        arenaBuffer.innerHTML = '';
+        arenaState.allocations.forEach(alloc => {
+            const allocDiv = document.createElement('div');
+            allocDiv.className = `absolute h-full ${alloc.color} transition-all duration-300`;
+            allocDiv.style.left = `${(alloc.offset / arenaState.size) * 100}%`;
+            allocDiv.style.width = `${(alloc.size / arenaState.size) * 100}%`;
+            allocDiv.title = `${alloc.size} bytes`;
+            arenaBuffer.appendChild(allocDiv);
+        });
+    }
+
+    function handleReset() {
+        if (!arenaState) return;
+        arenaState.offset = 0;
+        arenaState.allocations = [];
+        colorIndex = 0;
+        arenaBuffer.innerHTML = '';
+        logMessage('arena_reset() called. Offset is now 0.', 'warn');
+        updateUI();
+    }
+
+    function handleDestroy() {
+        if (!arenaState) return;
+        arenaState = null;
+        arenaBuffer.innerHTML = '';
+        logMessage('arena_destroy() called. Arena is gone.', 'warn');
+        updateUI();
+    }
+
+    // --- EVENT LISTENERS ---
+    createBtn.addEventListener('click', handleCreate);
+    allocBtn.addEventListener('click', handleAlloc);
+    resetBtn.addEventListener('click', handleReset);
+    destroyBtn.addEventListener('click', handleDestroy);
+    
+    // Accordion logic
+    document.querySelectorAll('.accordion-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('.accordion-icon');
+            
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                // Close all other accordions
+                document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = null);
+                document.querySelectorAll('.accordion-icon').forEach(i => i.style.transform = 'rotate(0deg)');
+                
+                content.style.maxHeight = content.scrollHeight + "px";
+                icon.style.transform = 'rotate(180deg)';
+            } 
+        });
+    });
+
+    // Copy code logic
+    const copyBtn = document.getElementById('copy-code-btn');
+    const codeContent = document.getElementById('code-content').textContent;
+    copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(codeContent.trim()).then(() => {
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => {
+                copyBtn.textContent = 'Copy';
+            }, 2000);
+        });
+    });
+});
+</script>
+
+</body>
+</html>

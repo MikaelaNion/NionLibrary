@@ -1,0 +1,118 @@
+Nion Library: Memory Arena Module
+1.0.0.0.20250925
+
+The Memory Arena module is a core component of the Nion Library, designed for high-performance memory management in C11. This system pre-allocates a large, contiguous block of memory and services subsequent allocation requests sequentially from within that block. This method minimizes the overhead associated with frequent calls to the standard library's malloc() and free() functions, making it ideal for applications with a known memory footprint or those that require rapid object creation and destruction (e.g., game engines, parsers, and temporary data structures).
+Key Concepts
+
+    Bump-Pointer Allocation: The arena uses a simple "bump-pointer" technique. All allocations are made from the current offset, which is then incremented by the size of the requested block. This eliminates fragmentation and provides extremely fast allocation times (O(1)).
+
+    Mass Deallocation: The primary advantage of an arena is the ability to deallocate all allocated memory at once. This is achieved by simply resetting the offset to zero, which is an O(1) operation, completely bypassing the need for individual free() calls.
+
+API Reference
+Data Structures
+Arena
+
+The Arena struct encapsulates the state of a memory arena. It is an opaque type to the user and should only be manipulated through the provided API functions.
+
+typedef struct {
+    char *buffer;   // Base address of the memory block
+    size_t size;    // Total size of the arena in bytes
+    size_t offset;  // Current allocation position
+} Arena;
+
+    buffer: A pointer to the start of the allocated memory.
+
+    size: The total capacity of the memory buffer in bytes.
+
+    offset: The current byte offset from the start of the buffer. This serves as the "bump-pointer" for all allocations.
+
+Functions
+arena_create
+
+Arena* arena_create(size_t size);
+
+    Description: Allocates and initializes a new Arena object with a buffer of the specified size.
+
+    Parameters:
+
+        size: The desired size of the memory arena buffer in bytes.
+
+    Returns: A pointer to the newly created Arena instance on success, or NULL if memory allocation fails.
+
+arena_alloc
+
+void* arena_alloc(Arena *arena, size_t size);
+
+    Description: Allocates a block of memory from the specified arena. The allocated memory is not initialized and may contain garbage values.
+
+    Parameters:
+
+        arena: A pointer to the Arena instance from which to allocate memory.
+
+        size: The number of bytes to allocate.
+
+    Returns: A void pointer to the newly allocated block on success. Returns NULL if the arena does not have sufficient space to fulfill the request.
+
+arena_reset
+
+void arena_reset(Arena *arena);
+
+    Description: Resets the arena for reuse. This function simply sets the offset back to zero, making all previously allocated memory available again. It does not free the underlying memory buffer, making it a very fast operation.
+
+    Parameters:
+
+        arena: A pointer to the Arena instance to reset.
+
+arena_destroy
+
+void arena_destroy(Arena *arena);
+
+    Description: Deallocates all memory associated with the arena, including the main buffer and the Arena struct itself. This should be called when the arena is no longer needed to prevent memory leaks.
+
+    Parameters:
+
+        arena: A pointer to the Arena instance to destroy. A NULL check is performed internally.
+
+Usage Example
+
+#include <stdio.h>
+#include <string.h>
+#include "../include/arena.h"
+
+int main() {
+    // Create an arena with a 1 MB buffer
+    Arena* my_arena = arena_create(1024 * 1024);
+    if (!my_arena) {
+        fprintf(stderr, "Failed to create arena.\n");
+        return 1;
+    }
+
+    // Allocate an integer and a character array
+    int* my_int = arena_alloc(my_arena, sizeof(int));
+    if (my_int) {
+        *my_int = 42;
+        printf("Allocated integer: %d\n", *my_int);
+    }
+
+    char* my_string = arena_alloc(my_arena, 20);
+    if (my_string) {
+        strcpy(my_string, "Hello, Arena!");
+        printf("Allocated string: %s\n", my_string);
+    }
+    
+    // Reset the arena to free all allocated memory at once
+    arena_reset(my_arena);
+    printf("\nArena has been reset.\n");
+
+    // Allocate a new string from the "reused" buffer
+    char* another_string = arena_alloc(my_arena, 30);
+    if (another_string) {
+        strcpy(another_string, "This is a new allocation!");
+        printf("New allocation after reset: %s\n", another_string);
+    }
+
+    // Destroy the arena when finished
+    arena_destroy(my_arena);
+
+    return 0;
+}
